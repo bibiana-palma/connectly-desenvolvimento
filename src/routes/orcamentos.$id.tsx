@@ -96,7 +96,7 @@ function BudgetDetail() {
         <label className="font-bold text-primary">Status:</label>
         <select
           value={budget.status}
-          onChange={(e) => handleStatus(e.target.value)}
+          onChange={(e) => handleStatus(e.target.value as "em_aberto" | "producao" | "pago" | "fechado_pagamento")}
           className="border border-primary/30 rounded-md px-3 py-2"
         >
           <option value="em_aberto">Em aberto</option>
