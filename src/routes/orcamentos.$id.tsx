@@ -39,7 +39,7 @@ function BudgetDetail() {
 
   if (!budget) return <div className="text-muted-foreground">Carregando...</div>;
 
-  const handleStatus = async (status: string) => {
+  const handleStatus = async (status: "em_aberto" | "producao" | "pago" | "fechado_pagamento") => {
     const { error } = await supabase.from("budgets").update({ status }).eq("id", id);
     if (error) toast.error(error.message);
     else {
