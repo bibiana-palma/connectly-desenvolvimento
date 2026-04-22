@@ -5,8 +5,6 @@ import {
   FileText,
   Users,
   BarChart3,
-  Calendar,
-  Handshake,
   Package,
   BookOpen,
   Settings,
@@ -22,8 +20,6 @@ const navItems = [
   { to: "/orcamentos", label: "Orçamentos", icon: FileText },
   { to: "/clientes", label: "Clientes", icon: Users },
   { to: "/relatorios", label: "Relatórios", icon: BarChart3 },
-  { to: "/agenda", label: "Agenda", icon: Calendar },
-  { to: "/vendedores", label: "Vendedores", icon: Handshake },
   { to: "/produtos", label: "Produtos", icon: Package },
   { to: "/conhecimentos", label: "Conhecimentos", icon: BookOpen },
 ] as const;

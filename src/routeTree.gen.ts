@@ -9,14 +9,12 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as VendedoresRouteImport } from './routes/vendedores'
 import { Route as RelatoriosRouteImport } from './routes/relatorios'
 import { Route as ProdutosRouteImport } from './routes/produtos'
 import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ConhecimentosRouteImport } from './routes/conhecimentos'
-import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as OrcamentosIndexRouteImport } from './routes/orcamentos.index'
 import { Route as ClientesIndexRouteImport } from './routes/clientes.index'
@@ -25,11 +23,6 @@ import { Route as OrcamentosIdRouteImport } from './routes/orcamentos.$id'
 import { Route as ClientesNovoRouteImport } from './routes/clientes.novo'
 import { Route as ClientesIdRouteImport } from './routes/clientes.$id'
 
-const VendedoresRoute = VendedoresRouteImport.update({
-  id: '/vendedores',
-  path: '/vendedores',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const RelatoriosRoute = RelatoriosRouteImport.update({
   id: '/relatorios',
   path: '/relatorios',
@@ -58,11 +51,6 @@ const DashboardRoute = DashboardRouteImport.update({
 const ConhecimentosRoute = ConhecimentosRouteImport.update({
   id: '/conhecimentos',
   path: '/conhecimentos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AgendaRoute = AgendaRouteImport.update({
-  id: '/agenda',
-  path: '/agenda',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -103,14 +91,12 @@ const ClientesIdRoute = ClientesIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/agenda': typeof AgendaRoute
   '/conhecimentos': typeof ConhecimentosRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/perfil': typeof PerfilRoute
   '/produtos': typeof ProdutosRoute
   '/relatorios': typeof RelatoriosRoute
-  '/vendedores': typeof VendedoresRoute
   '/clientes/$id': typeof ClientesIdRoute
   '/clientes/novo': typeof ClientesNovoRoute
   '/orcamentos/$id': typeof OrcamentosIdRoute
@@ -120,14 +106,12 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/agenda': typeof AgendaRoute
   '/conhecimentos': typeof ConhecimentosRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/perfil': typeof PerfilRoute
   '/produtos': typeof ProdutosRoute
   '/relatorios': typeof RelatoriosRoute
-  '/vendedores': typeof VendedoresRoute
   '/clientes/$id': typeof ClientesIdRoute
   '/clientes/novo': typeof ClientesNovoRoute
   '/orcamentos/$id': typeof OrcamentosIdRoute
@@ -138,14 +122,12 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/agenda': typeof AgendaRoute
   '/conhecimentos': typeof ConhecimentosRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/perfil': typeof PerfilRoute
   '/produtos': typeof ProdutosRoute
   '/relatorios': typeof RelatoriosRoute
-  '/vendedores': typeof VendedoresRoute
   '/clientes/$id': typeof ClientesIdRoute
   '/clientes/novo': typeof ClientesNovoRoute
   '/orcamentos/$id': typeof OrcamentosIdRoute
@@ -157,14 +139,12 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/agenda'
     | '/conhecimentos'
     | '/dashboard'
     | '/login'
     | '/perfil'
     | '/produtos'
     | '/relatorios'
-    | '/vendedores'
     | '/clientes/$id'
     | '/clientes/novo'
     | '/orcamentos/$id'
@@ -174,14 +154,12 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/agenda'
     | '/conhecimentos'
     | '/dashboard'
     | '/login'
     | '/perfil'
     | '/produtos'
     | '/relatorios'
-    | '/vendedores'
     | '/clientes/$id'
     | '/clientes/novo'
     | '/orcamentos/$id'
@@ -191,14 +169,12 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/agenda'
     | '/conhecimentos'
     | '/dashboard'
     | '/login'
     | '/perfil'
     | '/produtos'
     | '/relatorios'
-    | '/vendedores'
     | '/clientes/$id'
     | '/clientes/novo'
     | '/orcamentos/$id'
@@ -209,14 +185,12 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AgendaRoute: typeof AgendaRoute
   ConhecimentosRoute: typeof ConhecimentosRoute
   DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
   PerfilRoute: typeof PerfilRoute
   ProdutosRoute: typeof ProdutosRoute
   RelatoriosRoute: typeof RelatoriosRoute
-  VendedoresRoute: typeof VendedoresRoute
   ClientesIdRoute: typeof ClientesIdRoute
   ClientesNovoRoute: typeof ClientesNovoRoute
   OrcamentosIdRoute: typeof OrcamentosIdRoute
@@ -227,13 +201,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/vendedores': {
-      id: '/vendedores'
-      path: '/vendedores'
-      fullPath: '/vendedores'
-      preLoaderRoute: typeof VendedoresRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/relatorios': {
       id: '/relatorios'
       path: '/relatorios'
@@ -274,13 +241,6 @@ declare module '@tanstack/react-router' {
       path: '/conhecimentos'
       fullPath: '/conhecimentos'
       preLoaderRoute: typeof ConhecimentosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/agenda': {
-      id: '/agenda'
-      path: '/agenda'
-      fullPath: '/agenda'
-      preLoaderRoute: typeof AgendaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -337,14 +297,12 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AgendaRoute: AgendaRoute,
   ConhecimentosRoute: ConhecimentosRoute,
   DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
   PerfilRoute: PerfilRoute,
   ProdutosRoute: ProdutosRoute,
   RelatoriosRoute: RelatoriosRoute,
-  VendedoresRoute: VendedoresRoute,
   ClientesIdRoute: ClientesIdRoute,
   ClientesNovoRoute: ClientesNovoRoute,
   OrcamentosIdRoute: OrcamentosIdRoute,
