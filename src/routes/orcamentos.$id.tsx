@@ -4,7 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/orcamentos/$id")({
   component: () => (
@@ -14,38 +14,121 @@ export const Route = createFileRoute("/orcamentos/$id")({
   ),
 });
 
+interface Item {
+  id?: string;
+  product_name: string;
+  quantity: number;
+  unit_price: number;
+}
+
 function BudgetDetail() {
   const { id } = Route.useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [budget, setBudget] = useState<any>(null);
-  const [items, setItems] = useState<any[]>([]);
+
+  const [clients, setClients] = useState<any[]>([]);
+  const [clientId, setClientId] = useState<string>("");
+  const [seller, setSeller] = useState("");
+  const [freight, setFreight] = useState(0);
+  const [notes, setNotes] = useState("");
+  const [status, setStatus] = useState<"em_aberto" | "producao" | "pago" | "fechado_pagamento">("em_aberto");
+  const [items, setItems] = useState<Item[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from("budgets")
-      .select("*")
-      .eq("id", id)
-      .eq("user_id", user.id)
-      .maybeSingle()
-      .then(({ data }) => setBudget(data));
-    supabase
-      .from("budget_items")
-      .select("*")
-      .eq("budget_id", id)
-      .then(({ data }) => setItems(data || []));
+    (async () => {
+      const [{ data: budget }, { data: itemsData }, { data: clientsData }] = await Promise.all([
+        supabase.from("budgets").select("*").eq("id", id).eq("user_id", user.id).maybeSingle(),
+        supabase.from("budget_items").select("*").eq("budget_id", id).order("created_at", { ascending: true }),
+        supabase.from("clients").select("id,name").eq("user_id", user.id),
+      ]);
+      if (!budget) {
+        setLoaded(true);
+        return;
+      }
+      setClientId(budget.client_id || "");
+      setSeller(budget.seller_name || "");
+      setFreight(Number(budget.freight) || 0);
+      setNotes(budget.notes || "");
+      setStatus(budget.status);
+      setItems(
+        (itemsData || []).map((it: any) => ({
+          id: it.id,
+          product_name: it.product_name,
+          quantity: Number(it.quantity),
+          unit_price: Number(it.unit_price),
+        })),
+      );
+      setClients(clientsData || []);
+      setLoaded(true);
+    })();
   }, [id, user]);
 
-  if (!budget) return <div className="text-muted-foreground">Carregando...</div>;
+  if (!loaded) return <div className="text-muted-foreground">Carregando...</div>;
 
-  const handleStatus = async (status: "em_aberto" | "producao" | "pago" | "fechado_pagamento") => {
-    const { error } = await supabase.from("budgets").update({ status }).eq("id", id);
-    if (error) toast.error(error.message);
-    else {
-      toast.success("Status atualizado");
-      setBudget({ ...budget, status });
+  const productsTotal = items.reduce((s, it) => s + Number(it.quantity) * Number(it.unit_price), 0);
+  const total = productsTotal + Number(freight);
+
+  const updateItem = (i: number, patch: Partial<Item>) => {
+    setItems(items.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
+  };
+
+  const handleSave = async () => {
+    if (!user) return;
+    setSaving(true);
+
+    const clientName = clients.find((c) => c.id === clientId)?.name || "";
+
+    const { error: e1 } = await supabase
+      .from("budgets")
+      .update({
+        client_id: clientId || null,
+        client_name_snapshot: clientName,
+        seller_name: seller,
+        freight,
+        products_total: productsTotal,
+        total,
+        status,
+        notes,
+      })
+      .eq("id", id);
+
+    if (e1) {
+      toast.error(e1.message);
+      setSaving(false);
+      return;
     }
+
+    // Replace items: delete existing then insert current
+    const { error: eDel } = await supabase.from("budget_items").delete().eq("budget_id", id);
+    if (eDel) {
+      toast.error(eDel.message);
+      setSaving(false);
+      return;
+    }
+
+    const validItems = items.filter((it) => it.product_name.trim());
+    if (validItems.length) {
+      const { error: e2 } = await supabase.from("budget_items").insert(
+        validItems.map((it) => ({
+          budget_id: id,
+          user_id: user.id,
+          product_name: it.product_name,
+          quantity: it.quantity,
+          unit_price: it.unit_price,
+        })),
+      );
+      if (e2) {
+        toast.error(e2.message);
+        setSaving(false);
+        return;
+      }
+    }
+
+    setSaving(false);
+    toast.success("Orçamento atualizado!");
   };
 
   const handleDelete = async () => {
@@ -60,76 +143,186 @@ function BudgetDetail() {
 
   return (
     <div>
-      <button onClick={() => navigate({ to: "/orcamentos" })} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4">
+      <button
+        onClick={() => navigate({ to: "/orcamentos" })}
+        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4"
+      >
         <ArrowLeft className="w-4 h-4" /> Voltar
       </button>
-      <div className="flex items-start justify-between mb-8">
-        <h1 className="font-display italic text-3xl text-primary">Orçamento #{id.slice(0, 8)}</h1>
-        <div className="text-sm space-y-1">
-          <div><span className="font-bold text-primary">Vendedor:</span> {budget.seller_name}</div>
-          <div><span className="font-bold text-primary">Cliente:</span> {budget.client_name_snapshot}</div>
+
+      <div className="flex items-start justify-between mb-8 gap-4 flex-wrap">
+        <h1 className="font-display italic text-3xl text-primary">Editar Orçamento #{id.slice(0, 8)}</h1>
+        <div className="space-y-2 text-sm">
+          <div className="flex items-center gap-3">
+            <label className="font-bold text-primary w-20">Vendedor:</label>
+            <input
+              value={seller}
+              onChange={(e) => setSeller(e.target.value)}
+              className="bg-primary text-primary-foreground rounded-md px-3 py-1 w-56"
+            />
+          </div>
+          <div className="flex items-center gap-3">
+            <label className="font-bold text-primary w-20">Cliente:</label>
+            <select
+              value={clientId}
+              onChange={(e) => setClientId(e.target.value)}
+              className="bg-primary text-primary-foreground rounded-md px-3 py-1 w-56"
+            >
+              <option value="">Selecione...</option>
+              {clients.map((c) => (
+                <option key={c.id} value={c.id} className="bg-white text-foreground">
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
-      <div className="border-2 border-primary rounded-xl overflow-hidden mb-8">
+      {/* Items table */}
+      <div className="border-2 border-primary rounded-xl overflow-hidden mb-3">
         <div className="grid grid-cols-12 bg-white border-b-2 border-primary">
-          <div className="col-span-7 px-4 py-3 font-bold text-primary text-center border-r-2 border-primary">Produtos</div>
-          <div className="col-span-2 px-4 py-3 font-bold text-primary text-center border-r-2 border-primary">Qtd</div>
-          <div className="col-span-3 px-4 py-3 font-bold text-primary text-center">Valor</div>
+          <div className="col-span-7 px-4 py-3 font-bold text-primary text-center border-r-2 border-primary">Produtos:</div>
+          <div className="col-span-2 px-4 py-3 font-bold text-primary text-center border-r-2 border-primary">Quantidade:</div>
+          <div className="col-span-3 px-4 py-3 font-bold text-primary text-center">Valor:</div>
         </div>
-        {items.map((it) => (
-          <div key={it.id} className="grid grid-cols-12 border-b border-primary/30 last:border-0">
-            <div className="col-span-7 px-4 py-2 border-r border-primary/30">{it.product_name}</div>
-            <div className="col-span-2 px-4 py-2 border-r border-primary/30 text-center">{it.quantity}</div>
-            <div className="col-span-3 px-4 py-2 text-right">R$ {Number(it.unit_price).toFixed(2)}</div>
+        {items.length === 0 && (
+          <div className="px-4 py-6 text-center text-muted-foreground text-sm">Nenhum item. Adicione abaixo.</div>
+        )}
+        {items.map((it, i) => (
+          <div key={i} className="grid grid-cols-12 border-b border-primary/40 last:border-0">
+            <input
+              value={it.product_name}
+              onChange={(e) => updateItem(i, { product_name: e.target.value })}
+              className="col-span-7 px-4 py-3 outline-none border-r border-primary/40"
+              placeholder="Descrição do produto"
+            />
+            <input
+              type="number"
+              min={0}
+              step="0.01"
+              value={it.quantity}
+              onChange={(e) => updateItem(i, { quantity: Number(e.target.value) })}
+              className="col-span-2 px-4 py-3 outline-none border-r border-primary/40 text-center"
+            />
+            <div className="col-span-3 flex">
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={it.unit_price}
+                onChange={(e) => updateItem(i, { unit_price: Number(e.target.value) })}
+                className="flex-1 px-4 py-3 outline-none text-right"
+              />
+              <button
+                type="button"
+                onClick={() => setItems(items.filter((_, idx) => idx !== i))}
+                className="px-3 text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         ))}
       </div>
 
-      <div className="border-2 border-primary rounded-xl overflow-hidden max-w-2xl mb-6">
-        <Row label="Valor dos produtos:" value={Number(budget.products_total).toFixed(2)} />
-        <Row label="Frete:" value={Number(budget.freight).toFixed(2)} />
-        <Row label="VALOR TOTAL:" value={Number(budget.total).toFixed(2)} bold />
-      </div>
-
-      <div className="flex items-center gap-4 mb-6">
-        <label className="font-bold text-primary">Status:</label>
-        <select
-          value={budget.status}
-          onChange={(e) => handleStatus(e.target.value as "em_aberto" | "producao" | "pago" | "fechado_pagamento")}
-          className="border border-primary/30 rounded-md px-3 py-2"
+      <div className="flex justify-end mb-10">
+        <button
+          type="button"
+          onClick={() => setItems([...items, { product_name: "", quantity: 1, unit_price: 0 }])}
+          className="bg-primary text-primary-foreground px-5 py-2 rounded-full flex items-center gap-2 font-semibold text-sm"
         >
-          <option value="em_aberto">Em aberto</option>
-          <option value="producao">Produção</option>
-          <option value="pago">Pago</option>
-          <option value="fechado_pagamento">Fechado / pagamento</option>
-        </select>
+          <Plus className="w-4 h-4" /> LINHA
+        </button>
       </div>
 
-      {budget.notes && (
-        <div className="border border-primary/30 rounded-lg p-4 mb-6">
-          <div className="font-bold text-primary text-sm mb-1">Observações</div>
-          <div className="text-sm whitespace-pre-wrap">{budget.notes}</div>
-        </div>
-      )}
+      {/* Totals */}
+      <div className="border-2 border-primary rounded-xl overflow-hidden max-w-2xl mb-6">
+        <Row label="Valor dos produtos:" value={productsTotal.toFixed(2)} readOnly />
+        <Row label="Frete:" value={String(freight)} onChange={(v) => setFreight(Number(v))} />
+        <Row label="VALOR TOTAL DA COMPRA:" value={total.toFixed(2)} readOnly bold />
+      </div>
 
-      <button
-        onClick={handleDelete}
-        className="px-4 py-2 rounded-full bg-destructive text-destructive-foreground text-sm font-semibold flex items-center gap-2"
-      >
-        <Trash2 className="w-4 h-4" /> Excluir orçamento
-      </button>
+      {/* Status + notes */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <div className="border-2 border-primary rounded-xl p-4">
+          <label className="font-bold text-primary text-sm block mb-2">STATUS:</label>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value as any)}
+            className="w-full bg-white border border-primary/30 rounded-md px-3 py-2 outline-none"
+          >
+            <option value="em_aberto">Em aberto</option>
+            <option value="producao">Produção</option>
+            <option value="pago">Pago</option>
+            <option value="fechado_pagamento">Fechado / pagamento</option>
+          </select>
+        </div>
+        <div className="lg:col-span-2 border-2 border-primary rounded-xl p-4">
+          <label className="font-bold text-primary text-sm block mb-2">OBSERVAÇÕES:</label>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={3}
+            className="w-full bg-transparent outline-none resize-none"
+          />
+        </div>
+      </div>
+
+      <div className="flex justify-between gap-3">
+        <button
+          onClick={handleDelete}
+          className="px-4 py-2.5 rounded-full bg-destructive text-destructive-foreground text-sm font-semibold flex items-center gap-2"
+        >
+          <Trash2 className="w-4 h-4" /> Excluir
+        </button>
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() => navigate({ to: "/orcamentos" })}
+            className="px-6 py-2.5 rounded-full bg-secondary text-secondary-foreground font-semibold"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="px-8 py-2.5 rounded-full bg-primary text-primary-foreground font-bold disabled:opacity-60"
+          >
+            {saving ? "Salvando..." : "Salvar Alterações"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
 
-function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
+function Row({
+  label,
+  value,
+  onChange,
+  readOnly,
+  bold,
+}: {
+  label: string;
+  value: string;
+  onChange?: (v: string) => void;
+  readOnly?: boolean;
+  bold?: boolean;
+}) {
   return (
     <div className="grid grid-cols-3 border-b-2 border-primary last:border-0">
       <div className={`col-span-2 px-4 py-3 border-r-2 border-primary text-primary ${bold ? "font-bold" : "font-semibold"}`}>
         {label}
       </div>
-      <div className={`px-4 py-3 text-right ${bold ? "font-bold" : ""}`}>R$ {value}</div>
+      <input
+        type="number"
+        step="0.01"
+        value={value}
+        onChange={(e) => onChange?.(e.target.value)}
+        readOnly={readOnly}
+        className={`px-4 py-3 outline-none text-right ${readOnly ? "bg-accent/30" : ""} ${bold ? "font-bold" : ""}`}
+      />
     </div>
   );
 }
