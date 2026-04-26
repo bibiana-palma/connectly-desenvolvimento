@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as StatusRouteImport } from './routes/status'
 import { Route as RelatoriosRouteImport } from './routes/relatorios'
 import { Route as ProdutosRouteImport } from './routes/produtos'
 import { Route as PerfilRouteImport } from './routes/perfil'
@@ -23,6 +24,11 @@ import { Route as OrcamentosIdRouteImport } from './routes/orcamentos.$id'
 import { Route as ClientesNovoRouteImport } from './routes/clientes.novo'
 import { Route as ClientesIdRouteImport } from './routes/clientes.$id'
 
+const StatusRoute = StatusRouteImport.update({
+  id: '/status',
+  path: '/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RelatoriosRoute = RelatoriosRouteImport.update({
   id: '/relatorios',
   path: '/relatorios',
@@ -97,6 +103,7 @@ export interface FileRoutesByFullPath {
   '/perfil': typeof PerfilRoute
   '/produtos': typeof ProdutosRoute
   '/relatorios': typeof RelatoriosRoute
+  '/status': typeof StatusRoute
   '/clientes/$id': typeof ClientesIdRoute
   '/clientes/novo': typeof ClientesNovoRoute
   '/orcamentos/$id': typeof OrcamentosIdRoute
@@ -112,6 +119,7 @@ export interface FileRoutesByTo {
   '/perfil': typeof PerfilRoute
   '/produtos': typeof ProdutosRoute
   '/relatorios': typeof RelatoriosRoute
+  '/status': typeof StatusRoute
   '/clientes/$id': typeof ClientesIdRoute
   '/clientes/novo': typeof ClientesNovoRoute
   '/orcamentos/$id': typeof OrcamentosIdRoute
@@ -128,6 +136,7 @@ export interface FileRoutesById {
   '/perfil': typeof PerfilRoute
   '/produtos': typeof ProdutosRoute
   '/relatorios': typeof RelatoriosRoute
+  '/status': typeof StatusRoute
   '/clientes/$id': typeof ClientesIdRoute
   '/clientes/novo': typeof ClientesNovoRoute
   '/orcamentos/$id': typeof OrcamentosIdRoute
@@ -145,6 +154,7 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/produtos'
     | '/relatorios'
+    | '/status'
     | '/clientes/$id'
     | '/clientes/novo'
     | '/orcamentos/$id'
@@ -160,6 +170,7 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/produtos'
     | '/relatorios'
+    | '/status'
     | '/clientes/$id'
     | '/clientes/novo'
     | '/orcamentos/$id'
@@ -175,6 +186,7 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/produtos'
     | '/relatorios'
+    | '/status'
     | '/clientes/$id'
     | '/clientes/novo'
     | '/orcamentos/$id'
@@ -191,6 +203,7 @@ export interface RootRouteChildren {
   PerfilRoute: typeof PerfilRoute
   ProdutosRoute: typeof ProdutosRoute
   RelatoriosRoute: typeof RelatoriosRoute
+  StatusRoute: typeof StatusRoute
   ClientesIdRoute: typeof ClientesIdRoute
   ClientesNovoRoute: typeof ClientesNovoRoute
   OrcamentosIdRoute: typeof OrcamentosIdRoute
@@ -201,6 +214,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/status': {
+      id: '/status'
+      path: '/status'
+      fullPath: '/status'
+      preLoaderRoute: typeof StatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/relatorios': {
       id: '/relatorios'
       path: '/relatorios'
@@ -303,6 +323,7 @@ const rootRouteChildren: RootRouteChildren = {
   PerfilRoute: PerfilRoute,
   ProdutosRoute: ProdutosRoute,
   RelatoriosRoute: RelatoriosRoute,
+  StatusRoute: StatusRoute,
   ClientesIdRoute: ClientesIdRoute,
   ClientesNovoRoute: ClientesNovoRoute,
   OrcamentosIdRoute: OrcamentosIdRoute,

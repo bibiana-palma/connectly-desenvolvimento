@@ -6,6 +6,7 @@ import {
   Users,
   BarChart3,
   Package,
+  Tags,
   BookOpen,
   Settings,
   UserCircle2,
@@ -21,6 +22,7 @@ const navItems = [
   { to: "/clientes", label: "Clientes", icon: Users },
   { to: "/relatorios", label: "Relatórios", icon: BarChart3 },
   { to: "/produtos", label: "Produtos", icon: Package },
+  { to: "/status", label: "Criação Status", icon: Tags },
   { to: "/conhecimentos", label: "Conhecimentos", icon: BookOpen },
 ] as const;
 
