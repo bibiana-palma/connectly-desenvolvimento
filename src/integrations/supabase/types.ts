@@ -62,11 +62,42 @@ export type Database = {
           },
         ]
       }
+      budget_statuses: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          name: string
+          sort_order: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          name: string
+          sort_order?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          name?: string
+          sort_order?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       budgets: {
         Row: {
           client_id: string | null
           client_name_snapshot: string | null
           created_at: string
+          custom_status_id: string | null
           freight: number
           id: string
           notes: string | null
@@ -81,6 +112,7 @@ export type Database = {
           client_id?: string | null
           client_name_snapshot?: string | null
           created_at?: string
+          custom_status_id?: string | null
           freight?: number
           id?: string
           notes?: string | null
@@ -95,6 +127,7 @@ export type Database = {
           client_id?: string | null
           client_name_snapshot?: string | null
           created_at?: string
+          custom_status_id?: string | null
           freight?: number
           id?: string
           notes?: string | null
@@ -111,6 +144,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budgets_custom_status_id_fkey"
+            columns: ["custom_status_id"]
+            isOneToOne: false
+            referencedRelation: "budget_statuses"
             referencedColumns: ["id"]
           },
         ]
