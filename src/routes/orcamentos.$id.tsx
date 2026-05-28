@@ -43,10 +43,11 @@ function BudgetDetail() {
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const [{ data: budget }, { data: itemsData }, { data: clientsData }] = await Promise.all([
+      const [{ data: budget }, { data: itemsData }, { data: clientsData }, { data: statusesData }] = await Promise.all([
         supabase.from("budgets").select("*").eq("id", id).eq("user_id", user.id).maybeSingle(),
         supabase.from("budget_items").select("*").eq("budget_id", id).order("created_at", { ascending: true }),
         supabase.from("clients").select("id,name").eq("user_id", user.id),
+        supabase.from("budget_statuses").select("id,name,color").eq("user_id", user.id).order("sort_order").order("created_at"),
       ]);
       if (!budget) {
         setLoaded(true);
@@ -59,6 +60,8 @@ function BudgetDetail() {
       setFreight(Number(budget.freight) || 0);
       setNotes(budget.notes || "");
       setStatus(budget.status);
+      setCustomStatusId(budget.custom_status_id || "");
+      setCustomStatuses(statusesData || []);
       setItems(
         (itemsData || []).map((it: any) => ({
           id: it.id,
