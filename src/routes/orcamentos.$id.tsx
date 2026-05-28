@@ -4,7 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Printer, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/orcamentos/$id")({
   component: () => (
@@ -143,12 +143,20 @@ function BudgetDetail() {
 
   return (
     <div>
-      <button
-        onClick={() => navigate({ to: "/orcamentos" })}
-        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4"
-      >
-        <ArrowLeft className="w-4 h-4" /> Voltar
-      </button>
+      <div className="flex items-center justify-between mb-4 print:hidden">
+        <button
+          onClick={() => navigate({ to: "/orcamentos" })}
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="w-4 h-4" /> Voltar
+        </button>
+        <button
+          onClick={() => window.print()}
+          className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold"
+        >
+          <Printer className="w-4 h-4" /> Imprimir Orçamento
+        </button>
+      </div>
 
       <div className="flex items-start justify-between mb-8 gap-4 flex-wrap">
         <h1 className="font-display italic text-3xl text-primary">Editar Orçamento #{id.slice(0, 8)}</h1>
@@ -269,7 +277,7 @@ function BudgetDetail() {
         </div>
       </div>
 
-      <div className="flex justify-between gap-3">
+      <div className="flex justify-between gap-3 print:hidden">
         <button
           onClick={handleDelete}
           className="px-4 py-2.5 rounded-full bg-destructive text-destructive-foreground text-sm font-semibold flex items-center gap-2"
