@@ -4,7 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Printer, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/orcamentos/$id")({
   component: () => (
