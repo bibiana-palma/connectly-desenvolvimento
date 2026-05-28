@@ -51,6 +51,8 @@ function BudgetDetail() {
         return;
       }
       setClientId(budget.client_id || "");
+      setClientNameSnapshot(budget.client_name_snapshot || "");
+      setBudgetNumber(budget.budget_number ?? null);
       setSeller(budget.seller_name || "");
       setFreight(Number(budget.freight) || 0);
       setNotes(budget.notes || "");
