@@ -100,6 +100,7 @@ function BudgetDetail() {
         products_total: productsTotal,
         total,
         status,
+        custom_status_id: customStatusId || null,
         notes,
       })
       .eq("id", id);
