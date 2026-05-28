@@ -163,7 +163,10 @@ function BudgetDetail() {
       </div>
 
       <div className="flex items-start justify-between mb-8 gap-4 flex-wrap">
-        <h1 className="font-display italic text-3xl text-primary">Editar Orçamento #{id.slice(0, 8)}</h1>
+        <h1 className="font-display italic text-3xl text-primary">
+          {(clients.find((c) => c.id === clientId)?.name || clientNameSnapshot || "Orçamento")}
+          {budgetNumber != null && <span className="text-foreground/70"> #{String(budgetNumber).padStart(3, "0")}</span>}
+        </h1>
         <div className="space-y-2 text-sm">
           <div className="flex items-center gap-3">
             <label className="font-bold text-primary w-20">Vendedor:</label>
