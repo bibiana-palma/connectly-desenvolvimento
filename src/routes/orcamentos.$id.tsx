@@ -277,7 +277,7 @@ function BudgetDetail() {
         </div>
       </div>
 
-      <div className="flex justify-between gap-3">
+      <div className="flex justify-between gap-3 print:hidden">
         <button
           onClick={handleDelete}
           className="px-4 py-2.5 rounded-full bg-destructive text-destructive-foreground text-sm font-semibold flex items-center gap-2"
