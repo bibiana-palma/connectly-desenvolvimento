@@ -78,6 +78,7 @@ function NewBudget() {
         products_total: productsTotal,
         total,
         status,
+        custom_status_id: customStatusId || null,
         notes,
       })
       .select()
