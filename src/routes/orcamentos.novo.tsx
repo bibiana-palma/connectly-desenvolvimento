@@ -44,6 +44,16 @@ function NewBudget() {
       .select("id,name")
       .eq("user_id", user.id)
       .then(({ data }) => setClients(data || []));
+    supabase
+      .from("budget_statuses")
+      .select("id,name")
+      .eq("user_id", user.id)
+      .order("sort_order")
+      .order("created_at")
+      .then(({ data }) => {
+        setCustomStatuses(data || []);
+        if (data && data.length) setCustomStatusId(data[0].id);
+      });
     setSeller(user.user_metadata?.name || user.email?.split("@")[0] || "");
   }, [user]);
 
