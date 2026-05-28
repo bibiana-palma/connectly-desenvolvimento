@@ -268,16 +268,22 @@ function BudgetDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div className="border-2 border-primary rounded-xl p-4">
           <label className="font-bold text-primary text-sm block mb-2">STATUS:</label>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value as any)}
-            className="w-full bg-white border border-primary/30 rounded-md px-3 py-2 outline-none"
-          >
-            <option value="em_aberto">Em aberto</option>
-            <option value="producao">Produção</option>
-            <option value="pago">Pago</option>
-            <option value="fechado_pagamento">Fechado / pagamento</option>
-          </select>
+          {customStatuses.length === 0 ? (
+            <div className="text-sm text-muted-foreground">
+              Nenhum status cadastrado. Crie em <a href="/status" className="text-primary underline">Status</a>.
+            </div>
+          ) : (
+            <select
+              value={customStatusId}
+              onChange={(e) => setCustomStatusId(e.target.value)}
+              className="w-full bg-white border border-primary/30 rounded-md px-3 py-2 outline-none"
+            >
+              <option value="">Selecione...</option>
+              {customStatuses.map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          )}
         </div>
         <div className="lg:col-span-2 border-2 border-primary rounded-xl p-4">
           <label className="font-bold text-primary text-sm block mb-2">OBSERVAÇÕES:</label>
