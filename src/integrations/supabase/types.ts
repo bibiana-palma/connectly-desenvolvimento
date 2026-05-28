@@ -94,6 +94,7 @@ export type Database = {
       }
       budgets: {
         Row: {
+          budget_number: number | null
           client_id: string | null
           client_name_snapshot: string | null
           created_at: string
@@ -109,6 +110,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          budget_number?: number | null
           client_id?: string | null
           client_name_snapshot?: string | null
           created_at?: string
@@ -124,6 +126,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          budget_number?: number | null
           client_id?: string | null
           client_name_snapshot?: string | null
           created_at?: string
