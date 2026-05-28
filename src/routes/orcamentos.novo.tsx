@@ -28,7 +28,9 @@ function NewBudget() {
   const [seller, setSeller] = useState("");
   const [freight, setFreight] = useState(0);
   const [notes, setNotes] = useState("");
-  const [status, setStatus] = useState<"em_aberto" | "producao" | "pago" | "fechado_pagamento">("em_aberto");
+  const [status] = useState<"em_aberto" | "producao" | "pago" | "fechado_pagamento">("em_aberto");
+  const [customStatuses, setCustomStatuses] = useState<{ id: string; name: string }[]>([]);
+  const [customStatusId, setCustomStatusId] = useState("");
   const [items, setItems] = useState<Item[]>([
     { product_name: "", quantity: 1, unit_price: 0 },
     { product_name: "", quantity: 1, unit_price: 0 },
