@@ -143,12 +143,20 @@ function BudgetDetail() {
 
   return (
     <div>
-      <button
-        onClick={() => navigate({ to: "/orcamentos" })}
-        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4"
-      >
-        <ArrowLeft className="w-4 h-4" /> Voltar
-      </button>
+      <div className="flex items-center justify-between mb-4 print:hidden">
+        <button
+          onClick={() => navigate({ to: "/orcamentos" })}
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="w-4 h-4" /> Voltar
+        </button>
+        <button
+          onClick={() => window.print()}
+          className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold"
+        >
+          <Printer className="w-4 h-4" /> Imprimir Orçamento
+        </button>
+      </div>
 
       <div className="flex items-start justify-between mb-8 gap-4 flex-wrap">
         <h1 className="font-display italic text-3xl text-primary">Editar Orçamento #{id.slice(0, 8)}</h1>
