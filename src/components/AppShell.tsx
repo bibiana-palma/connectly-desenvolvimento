@@ -121,7 +121,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Main */}
-      <main className="flex-1 ml-64 p-8 md:p-10">{children}</main>
+      <main className="flex-1 ml-64 p-8 md:p-10 print:ml-0 print:p-0">{children}</main>
     </div>
   );
 }
