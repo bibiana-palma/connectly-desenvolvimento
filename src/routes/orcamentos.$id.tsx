@@ -34,6 +34,8 @@ function BudgetDetail() {
   const [status, setStatus] = useState<"em_aberto" | "producao" | "pago" | "fechado_pagamento">("em_aberto");
   const [items, setItems] = useState<Item[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [budgetNumber, setBudgetNumber] = useState<number | null>(null);
+  const [clientNameSnapshot, setClientNameSnapshot] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
