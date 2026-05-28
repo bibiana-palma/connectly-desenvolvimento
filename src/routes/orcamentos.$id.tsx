@@ -32,6 +32,8 @@ function BudgetDetail() {
   const [freight, setFreight] = useState(0);
   const [notes, setNotes] = useState("");
   const [status, setStatus] = useState<"em_aberto" | "producao" | "pago" | "fechado_pagamento">("em_aberto");
+  const [customStatuses, setCustomStatuses] = useState<{ id: string; name: string; color: string }[]>([]);
+  const [customStatusId, setCustomStatusId] = useState<string>("");
   const [items, setItems] = useState<Item[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [budgetNumber, setBudgetNumber] = useState<number | null>(null);
