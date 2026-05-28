@@ -28,7 +28,9 @@ function NewBudget() {
   const [seller, setSeller] = useState("");
   const [freight, setFreight] = useState(0);
   const [notes, setNotes] = useState("");
-  const [status, setStatus] = useState<"em_aberto" | "producao" | "pago" | "fechado_pagamento">("em_aberto");
+  const [status] = useState<"em_aberto" | "producao" | "pago" | "fechado_pagamento">("em_aberto");
+  const [customStatuses, setCustomStatuses] = useState<{ id: string; name: string }[]>([]);
+  const [customStatusId, setCustomStatusId] = useState("");
   const [items, setItems] = useState<Item[]>([
     { product_name: "", quantity: 1, unit_price: 0 },
     { product_name: "", quantity: 1, unit_price: 0 },
@@ -42,6 +44,16 @@ function NewBudget() {
       .select("id,name")
       .eq("user_id", user.id)
       .then(({ data }) => setClients(data || []));
+    supabase
+      .from("budget_statuses")
+      .select("id,name")
+      .eq("user_id", user.id)
+      .order("sort_order")
+      .order("created_at")
+      .then(({ data }) => {
+        setCustomStatuses(data || []);
+        if (data && data.length) setCustomStatusId(data[0].id);
+      });
     setSeller(user.user_metadata?.name || user.email?.split("@")[0] || "");
   }, [user]);
 
@@ -66,6 +78,7 @@ function NewBudget() {
         products_total: productsTotal,
         total,
         status,
+        custom_status_id: customStatusId || null,
         notes,
       })
       .select()
@@ -205,16 +218,21 @@ function NewBudget() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div className="border-2 border-primary rounded-xl p-4">
           <label className="font-bold text-primary text-sm block mb-2">STATUS:</label>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value as any)}
-            className="w-full bg-white border border-primary/30 rounded-md px-3 py-2 outline-none"
-          >
-            <option value="em_aberto">Em aberto</option>
-            <option value="producao">Produção</option>
-            <option value="pago">Pago</option>
-            <option value="fechado_pagamento">Fechado / pagamento</option>
-          </select>
+          {customStatuses.length === 0 ? (
+            <div className="text-sm text-muted-foreground">
+              Nenhum status cadastrado. Crie em <a href="/status" className="text-primary underline">Status</a>.
+            </div>
+          ) : (
+            <select
+              value={customStatusId}
+              onChange={(e) => setCustomStatusId(e.target.value)}
+              className="w-full bg-white border border-primary/30 rounded-md px-3 py-2 outline-none"
+            >
+              {customStatuses.map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          )}
         </div>
         <div className="lg:col-span-2 border-2 border-primary rounded-xl p-4">
           <label className="font-bold text-primary text-sm block mb-2">OBSERVAÇÕES:</label>

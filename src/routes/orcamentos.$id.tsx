@@ -32,6 +32,8 @@ function BudgetDetail() {
   const [freight, setFreight] = useState(0);
   const [notes, setNotes] = useState("");
   const [status, setStatus] = useState<"em_aberto" | "producao" | "pago" | "fechado_pagamento">("em_aberto");
+  const [customStatuses, setCustomStatuses] = useState<{ id: string; name: string; color: string }[]>([]);
+  const [customStatusId, setCustomStatusId] = useState<string>("");
   const [items, setItems] = useState<Item[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [budgetNumber, setBudgetNumber] = useState<number | null>(null);
@@ -41,10 +43,11 @@ function BudgetDetail() {
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const [{ data: budget }, { data: itemsData }, { data: clientsData }] = await Promise.all([
+      const [{ data: budget }, { data: itemsData }, { data: clientsData }, { data: statusesData }] = await Promise.all([
         supabase.from("budgets").select("*").eq("id", id).eq("user_id", user.id).maybeSingle(),
         supabase.from("budget_items").select("*").eq("budget_id", id).order("created_at", { ascending: true }),
         supabase.from("clients").select("id,name").eq("user_id", user.id),
+        supabase.from("budget_statuses").select("id,name,color").eq("user_id", user.id).order("sort_order").order("created_at"),
       ]);
       if (!budget) {
         setLoaded(true);
@@ -57,6 +60,8 @@ function BudgetDetail() {
       setFreight(Number(budget.freight) || 0);
       setNotes(budget.notes || "");
       setStatus(budget.status);
+      setCustomStatusId(budget.custom_status_id || "");
+      setCustomStatuses(statusesData || []);
       setItems(
         (itemsData || []).map((it: any) => ({
           id: it.id,
@@ -95,6 +100,7 @@ function BudgetDetail() {
         products_total: productsTotal,
         total,
         status,
+        custom_status_id: customStatusId || null,
         notes,
       })
       .eq("id", id);
@@ -262,16 +268,22 @@ function BudgetDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div className="border-2 border-primary rounded-xl p-4">
           <label className="font-bold text-primary text-sm block mb-2">STATUS:</label>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value as any)}
-            className="w-full bg-white border border-primary/30 rounded-md px-3 py-2 outline-none"
-          >
-            <option value="em_aberto">Em aberto</option>
-            <option value="producao">Produção</option>
-            <option value="pago">Pago</option>
-            <option value="fechado_pagamento">Fechado / pagamento</option>
-          </select>
+          {customStatuses.length === 0 ? (
+            <div className="text-sm text-muted-foreground">
+              Nenhum status cadastrado. Crie em <a href="/status" className="text-primary underline">Status</a>.
+            </div>
+          ) : (
+            <select
+              value={customStatusId}
+              onChange={(e) => setCustomStatusId(e.target.value)}
+              className="w-full bg-white border border-primary/30 rounded-md px-3 py-2 outline-none"
+            >
+              <option value="">Selecione...</option>
+              {customStatuses.map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          )}
         </div>
         <div className="lg:col-span-2 border-2 border-primary rounded-xl p-4">
           <label className="font-bold text-primary text-sm block mb-2">OBSERVAÇÕES:</label>
