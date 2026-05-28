@@ -50,7 +50,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen flex bg-background">
       {/* Sidebar */}
-      <aside className="w-64 bg-sidebar text-sidebar-foreground flex flex-col fixed inset-y-0 left-0 z-30">
+      <aside className="w-64 bg-sidebar text-sidebar-foreground flex flex-col fixed inset-y-0 left-0 z-30 print:hidden">
         <div className="px-6 pt-8 pb-6">
           <Link to="/dashboard" className="font-display text-3xl">
             Connectly
@@ -121,7 +121,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Main */}
-      <main className="flex-1 ml-64 p-8 md:p-10">{children}</main>
+      <main className="flex-1 ml-64 p-8 md:p-10 print:ml-0 print:p-0">{children}</main>
     </div>
   );
 }
