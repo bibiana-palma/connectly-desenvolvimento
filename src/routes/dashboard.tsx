@@ -28,10 +28,10 @@ export const Route = createFileRoute("/dashboard")({
   ),
 });
 
-const STATUS_SUMMARY = [
+const FALLBACK_STATUSES = [
   { key: "pago", label: "Pagos", color: "#1f3f96" },
   { key: "em_aberto", label: "Em aberto", color: "#3b82f6" },
-  { key: "producao", label: "Em producao", color: "#f5b400" },
+  { key: "producao", label: "Em produção", color: "#f5b400" },
   { key: "fechado_pagamento", label: "Fechado p/ pagamento", color: "#e30613" },
 ];
 
@@ -72,6 +72,22 @@ function Dashboard() {
     [statuses],
   );
 
+  const summaryStatuses = useMemo(
+    () =>
+      statuses.length
+        ? statuses.map((status) => ({
+            key: status.id,
+            label: status.name,
+            color: status.color || "#3b82f6",
+            normalized: normalizeStatus(status.name),
+          }))
+        : FALLBACK_STATUSES.map((status) => ({
+            ...status,
+            normalized: normalizeStatus(status.label),
+          })),
+    [statuses],
+  );
+
   const primaryStatusByBudgetId = useMemo(() => {
     const map: Record<string, string> = {};
     assignments.forEach((assignment) => {
@@ -85,32 +101,34 @@ function Dashboard() {
   const budgetsWithStatus = useMemo(
     () =>
       budgets.map((budget) => {
-        const assignedStatus = statusById[primaryStatusByBudgetId[budget.id]];
+        const assignedStatus = statusById[primaryStatusByBudgetId[budget.id] || budget.custom_status_id];
+        const legacyStatus = normalizeStatus(budget.status);
+        const matchingStatus = summaryStatuses.find((status) => status.normalized === legacyStatus);
         return {
           ...budget,
-          dashboardStatus: normalizeStatus(assignedStatus?.name || budget.status),
-          dashboardStatusLabel: assignedStatus?.name || statusLabelFromKey(budget.status),
+          dashboardStatusKey: assignedStatus?.id || matchingStatus?.key || legacyStatus,
+          dashboardStatusLabel: assignedStatus?.name || matchingStatus?.label || statusLabelFromKey(budget.status),
         };
       }),
-    [budgets, primaryStatusByBudgetId, statusById],
+    [budgets, primaryStatusByBudgetId, statusById, summaryStatuses],
   );
 
   const counts = useMemo(() => {
-    return STATUS_SUMMARY.reduce<Record<string, number>>((acc, status) => {
-      acc[status.key] = budgetsWithStatus.filter((budget) => budget.dashboardStatus === status.key).length;
+    return summaryStatuses.reduce<Record<string, number>>((acc, status) => {
+      acc[status.key] = budgetsWithStatus.filter((budget) => budget.dashboardStatusKey === status.key).length;
       return acc;
     }, {});
-  }, [budgetsWithStatus]);
+  }, [budgetsWithStatus, summaryStatuses]);
 
   const paidRevenue = useMemo(
     () =>
       budgetsWithStatus
-        .filter((budget) => budget.dashboardStatus === "pago")
+        .filter((budget) => normalizeStatus(budget.dashboardStatusLabel) === "pago")
         .reduce((sum, budget) => sum + Number(budget.total || 0), 0),
     [budgetsWithStatus],
   );
 
-  const chartData = STATUS_SUMMARY.map((status) => ({
+  const chartData = summaryStatuses.map((status) => ({
     name: status.label,
     value: counts[status.key] || 0,
     color: status.color,
@@ -122,13 +140,13 @@ function Dashboard() {
     <div>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
         <h1 className="font-display italic text-3xl xl:text-4xl text-primary">
-          Bem-Vindo ao Dashboard
+          Bem-vindo ao Dashboard
         </h1>
         <Link
           to="/orcamentos/novo"
           className="bg-primary text-primary-foreground px-6 py-3 rounded-full flex items-center gap-2 font-semibold hover:bg-primary/90 self-start sm:self-auto"
         >
-          <Plus className="w-4 h-4" /> Novo orcamento
+          <Plus className="w-4 h-4" /> Novo orçamento
         </Link>
       </div>
 
@@ -139,7 +157,7 @@ function Dashboard() {
           label="Receita (pagos)"
           value={paidRevenue.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
         />
-        <MetricCard icon={FileText} label="Orcamentos" value={budgets.length} />
+        <MetricCard icon={FileText} label="Orçamentos" value={budgets.length} />
         <MetricCard icon={Users} label="Clientes" value={clients.length} />
         <MetricCard icon={Box} label="Produtos" value={products.length} />
       </div>
@@ -147,7 +165,7 @@ function Dashboard() {
       <div className="grid grid-cols-1 xl:grid-cols-[2fr_1fr] gap-6 mb-6">
         <section className="border border-primary/20 rounded-2xl p-6 min-h-[360px]">
           <h2 className="font-display italic text-xl text-primary mb-4">
-            Distribuicao dos Orcamentos
+            Distribuição dos Orçamentos
           </h2>
           {chartData.length ? (
             <div className="h-[290px]">
@@ -173,7 +191,7 @@ function Dashboard() {
             </div>
           ) : (
             <div className="h-[290px] flex items-center justify-center text-muted-foreground">
-              Nenhum orcamento cadastrado ainda.
+              Nenhum orçamento cadastrado ainda.
             </div>
           )}
         </section>
@@ -181,7 +199,7 @@ function Dashboard() {
         <section className="border border-primary/20 rounded-2xl p-6 min-h-[360px]">
           <h2 className="font-display italic text-xl text-primary mb-4">Resumo</h2>
           <div className="space-y-5">
-            {STATUS_SUMMARY.map((status) => (
+            {summaryStatuses.map((status) => (
               <div key={status.key} className="flex items-center gap-3 text-sm">
                 <span
                   className="h-3 w-3 rounded-full shrink-0"
@@ -197,7 +215,7 @@ function Dashboard() {
 
       <section className="border border-primary/20 rounded-2xl p-6">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="font-display italic text-xl text-primary">Orcamentos recentes</h2>
+          <h2 className="font-display italic text-xl text-primary">Orçamentos recentes</h2>
           <Link
             to="/orcamentos"
             className="text-sm font-semibold text-primary hover:underline flex items-center gap-1"
@@ -208,7 +226,7 @@ function Dashboard() {
 
         {recentBudgets.length === 0 ? (
           <div className="py-10 text-center text-muted-foreground">
-            Nenhum orcamento cadastrado ainda.{" "}
+            Nenhum orçamento cadastrado ainda.{" "}
             <Link to="/orcamentos/novo" className="text-primary underline">
               Criar agora
             </Link>
@@ -286,7 +304,7 @@ function normalizeStatus(value?: string) {
 }
 
 function statusLabelFromKey(key?: string) {
-  return STATUS_SUMMARY.find((status) => status.key === key)?.label || "Em aberto";
+  return FALLBACK_STATUSES.find((status) => status.key === key)?.label || "Em aberto";
 }
 
 function formatDate(value?: string) {
