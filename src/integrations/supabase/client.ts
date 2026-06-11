@@ -24,8 +24,11 @@ function createSupabaseClient() {
     const mockDb: Record<string, any[]> = {
       products: [],
       profiles: [],
+      clients: [],
       budgets: [],
+      budget_items: [],
       budget_statuses: [],
+      budget_status_assignments: [],
     };
 
     let currentSession: any = null;
@@ -162,13 +165,34 @@ function createSupabaseClient() {
           const first = arr[0] ?? null;
           return Promise.resolve({ data: first, error: null });
         },
-        insert: async (row: any) => {
-          const item = { id: Date.now().toString(), created_at: new Date().toISOString(), ...row };
-          // debug log for development
-          try { console.debug('[mock supabase] insert into', table, item); } catch (e) {}
+        insert: (row: any) => {
+          const rows = Array.isArray(row) ? row : [row];
+          const inserted = rows.map((entry, idx) => ({
+            id: `${Date.now()}_${idx}`,
+            created_at: new Date().toISOString(),
+            ...entry,
+          }));
+          try { console.debug('[mock supabase] insert into', table, inserted); } catch (e) {}
           mockDb[table] = mockDb[table] || [];
-          mockDb[table].push(item);
-          return { data: [item], error: null };
+          mockDb[table].push(...inserted);
+          const result = { data: inserted, error: null };
+          const insertBuilder: any = {
+            select() {
+              return this;
+            },
+            single() {
+              return Promise.resolve({ data: inserted[0] ?? null, error: null });
+            },
+            maybeSingle() {
+              return Promise.resolve({ data: inserted[0] ?? null, error: null });
+            },
+            then(cb?: any) {
+              const resultPromise = Promise.resolve(result);
+              if (typeof cb === 'function') return resultPromise.then(cb);
+              return resultPromise;
+            },
+          };
+          return insertBuilder;
         },
         upsert: async (row: any) => {
           try { console.debug('[mock supabase] upsert into', table, row); } catch (e) {}
@@ -239,4 +263,3 @@ export const supabase = new Proxy({} as ReturnType<typeof createSupabaseClient>,
     return Reflect.get(_supabase, prop, receiver);
   },
 });
-
