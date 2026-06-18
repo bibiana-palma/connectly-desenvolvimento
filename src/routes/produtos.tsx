@@ -5,7 +5,7 @@ import { CurrencyInput } from "@/components/CurrencyInput";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Power, Search, Trash2 } from "lucide-react";
+import { Plus, Power, Search, SlidersHorizontal, Trash2, X } from "lucide-react";
 
 export const Route = createFileRoute("/produtos")({
   component: () => (
@@ -27,6 +27,10 @@ function Products() {
   const [products, setProducts] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [stockFilter, setStockFilter] = useState<"all" | "in_stock" | "out_of_stock">("all");
+  const [sortBy, setSortBy] = useState<"created" | "name" | "price" | "stock">("created");
   const [form, setForm] = useState<ProductForm>({
     name: "",
     description: "",
@@ -46,11 +50,36 @@ function Products() {
 
   useEffect(load, [user]);
 
-  const filtered = products.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase()),
-  );
+  const filtered = products
+    .filter((p) => {
+      const term = search.toLowerCase();
+      const matchesSearch =
+        p.name?.toLowerCase().includes(term) ||
+        p.description?.toLowerCase().includes(term);
+
+      if (!matchesSearch) return false;
+      if (statusFilter === "active" && !p.is_active) return false;
+      if (statusFilter === "inactive" && p.is_active) return false;
+      if (stockFilter === "in_stock" && Number(p.stock_quantity || 0) <= 0) return false;
+      if (stockFilter === "out_of_stock" && Number(p.stock_quantity || 0) > 0) return false;
+
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === "name") return String(a.name || "").localeCompare(String(b.name || ""), "pt-BR");
+      if (sortBy === "price") return Number(b.price || 0) - Number(a.price || 0);
+      if (sortBy === "stock") return Number(b.stock_quantity || 0) - Number(a.stock_quantity || 0);
+      return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+    });
   const active = products.filter((p) => p.is_active).length;
   const inactive = products.length - active;
+  const hasFilters = statusFilter !== "all" || stockFilter !== "all" || sortBy !== "created";
+
+  const clearFilters = () => {
+    setStatusFilter("all");
+    setStockFilter("all");
+    setSortBy("created");
+  };
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,13 +133,87 @@ function Products() {
       <h1 className="font-display italic text-3xl text-primary mb-8">Produtos</h1>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 border border-primary/30 rounded-2xl p-6">
-          <input
-            type="text"
-            placeholder="Buscar..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="px-4 py-2 border border-border rounded-lg w-full mb-4"
-          />
+          <div className="flex items-center gap-3 mb-4">
+            <input
+              type="text"
+              placeholder="Buscar..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="px-4 py-2 border border-border rounded-lg w-full"
+            />
+            <button
+              type="button"
+              onClick={() => setShowFilters((value) => !value)}
+              className={`p-2 rounded-lg border transition-colors ${
+                showFilters || hasFilters
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "border-border text-primary hover:bg-accent"
+              }`}
+              aria-label="Filtros"
+            >
+              <SlidersHorizontal className="w-5 h-5" />
+            </button>
+          </div>
+
+          {showFilters && (
+            <div className="mb-4 p-4 border border-border rounded-lg bg-accent/30 space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold">Filtros</span>
+                {hasFilters && (
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    className="text-xs text-primary flex items-center gap-1 hover:underline"
+                  >
+                    <X className="w-3 h-3" /> Limpar
+                  </button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <label className="text-xs font-semibold text-muted-foreground">
+                  Status
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+                    className="mt-1 w-full border rounded px-3 py-2 bg-background text-foreground"
+                  >
+                    <option value="all">Todos</option>
+                    <option value="active">Ativos</option>
+                    <option value="inactive">Desativados</option>
+                  </select>
+                </label>
+
+                <label className="text-xs font-semibold text-muted-foreground">
+                  Estoque
+                  <select
+                    value={stockFilter}
+                    onChange={(e) => setStockFilter(e.target.value as typeof stockFilter)}
+                    className="mt-1 w-full border rounded px-3 py-2 bg-background text-foreground"
+                  >
+                    <option value="all">Todos</option>
+                    <option value="in_stock">Com estoque</option>
+                    <option value="out_of_stock">Sem estoque</option>
+                  </select>
+                </label>
+
+                <label className="text-xs font-semibold text-muted-foreground">
+                  Ordenar
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                    className="mt-1 w-full border rounded px-3 py-2 bg-background text-foreground"
+                  >
+                    <option value="created">Cadastro</option>
+                    <option value="name">Nome</option>
+                    <option value="price">Maior valor</option>
+                    <option value="stock">Maior estoque</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-12 gap-3 px-4 py-3 border-b font-semibold text-sm">
             <div className="col-span-2">Codigo</div>
             <div className="col-span-3">Nome</div>
@@ -167,7 +270,11 @@ function Products() {
         </div>
 
         <div className="space-y-4">
-          <button className="w-full bg-primary text-primary-foreground py-3 rounded-full flex items-center justify-center gap-2 font-semibold">
+          <button
+            type="button"
+            onClick={() => setShowFilters((value) => !value)}
+            className="w-full bg-primary text-primary-foreground py-3 rounded-full flex items-center justify-center gap-2 font-semibold"
+          >
             <Search className="w-4 h-4" /> PESQUISAR
           </button>
           <button

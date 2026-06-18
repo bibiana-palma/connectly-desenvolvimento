@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Search, SlidersHorizontal } from "lucide-react";
+import { Plus, Search, SlidersHorizontal, X } from "lucide-react";
 
 export const Route = createFileRoute("/clientes/")({
   component: () => (
@@ -22,6 +22,10 @@ function ClientsList() {
   const { user } = useAuth();
   const [clients, setClients] = useState<any[]>([]);
   const [search, setSearch] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [typeFilter, setTypeFilter] = useState<"all" | "person" | "company">("all");
+  const [contactFilter, setContactFilter] = useState<"all" | "phone" | "email" | "missing_contact">("all");
+  const [sortBy, setSortBy] = useState<"created" | "name" | "recent">("created");
 
   useEffect(() => {
     if (!user) return;
@@ -33,9 +37,37 @@ function ClientsList() {
       .then(({ data }) => setClients(data || []));
   }, [user]);
 
-  const filtered = clients.filter((c) =>
-    c.name.toLowerCase().includes(search.toLowerCase()),
-  );
+  const filtered = clients
+    .filter((c) => {
+      const term = search.toLowerCase();
+      const matchesSearch =
+        c.name?.toLowerCase().includes(term) ||
+        c.email?.toLowerCase().includes(term) ||
+        c.phone?.toLowerCase().includes(term) ||
+        c.cpf?.toLowerCase().includes(term);
+
+      if (!matchesSearch) return false;
+      if (typeFilter === "person" && c.is_legal_entity) return false;
+      if (typeFilter === "company" && !c.is_legal_entity) return false;
+      if (contactFilter === "phone" && !c.phone) return false;
+      if (contactFilter === "email" && !c.email) return false;
+      if (contactFilter === "missing_contact" && (c.phone || c.email)) return false;
+
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === "name") return String(a.name || "").localeCompare(String(b.name || ""), "pt-BR");
+      if (sortBy === "recent") return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+      return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+    });
+
+  const hasFilters = typeFilter !== "all" || contactFilter !== "all" || sortBy !== "created";
+
+  const clearFilters = () => {
+    setTypeFilter("all");
+    setContactFilter("all");
+    setSortBy("created");
+  };
 
   return (
     <div>
@@ -48,23 +80,98 @@ function ClientsList() {
           >
             <Plus className="w-4 h-4" /> LEAD
           </Link>
-          <button className="bg-primary text-primary-foreground px-6 py-2.5 rounded-full flex items-center gap-2 font-semibold hover:bg-primary/90">
+          <button
+            type="button"
+            onClick={() => setShowFilters((value) => !value)}
+            className="bg-primary text-primary-foreground px-6 py-2.5 rounded-full flex items-center gap-2 font-semibold hover:bg-primary/90"
+          >
             <Search className="w-4 h-4" /> PESQUISAR
           </button>
         </div>
       </div>
 
       <div className="border border-primary/30 rounded-2xl p-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 gap-3">
           <input
             type="text"
             placeholder="Buscar..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="px-4 py-2 border border-border rounded-lg max-w-xs"
+            className="px-4 py-2 border border-border rounded-lg max-w-xs flex-1"
           />
-          <SlidersHorizontal className="w-5 h-5 text-primary" />
+          <button
+            type="button"
+            onClick={() => setShowFilters((value) => !value)}
+            className={`p-2 rounded-lg border transition-colors ${
+              showFilters || hasFilters
+                ? "bg-primary text-primary-foreground border-primary"
+                : "border-border text-primary hover:bg-accent"
+            }`}
+            aria-label="Filtros"
+          >
+            <SlidersHorizontal className="w-5 h-5" />
+          </button>
         </div>
+
+        {showFilters && (
+          <div className="mb-4 p-4 border border-border rounded-lg bg-accent/30 space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold">Filtros</span>
+              {hasFilters && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="text-xs text-primary flex items-center gap-1 hover:underline"
+                >
+                  <X className="w-3 h-3" /> Limpar
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <label className="text-xs font-semibold text-muted-foreground">
+                Tipo
+                <select
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value as typeof typeFilter)}
+                  className="mt-1 w-full border rounded px-3 py-2 bg-background text-foreground"
+                >
+                  <option value="all">Todos</option>
+                  <option value="person">Pessoa fisica</option>
+                  <option value="company">Pessoa juridica</option>
+                </select>
+              </label>
+
+              <label className="text-xs font-semibold text-muted-foreground">
+                Contato
+                <select
+                  value={contactFilter}
+                  onChange={(e) => setContactFilter(e.target.value as typeof contactFilter)}
+                  className="mt-1 w-full border rounded px-3 py-2 bg-background text-foreground"
+                >
+                  <option value="all">Todos</option>
+                  <option value="phone">Com telefone</option>
+                  <option value="email">Com email</option>
+                  <option value="missing_contact">Sem contato</option>
+                </select>
+              </label>
+
+              <label className="text-xs font-semibold text-muted-foreground">
+                Ordenar
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                  className="mt-1 w-full border rounded px-3 py-2 bg-background text-foreground"
+                >
+                  <option value="created">Mais antigos</option>
+                  <option value="recent">Mais recentes</option>
+                  <option value="name">Nome</option>
+                </select>
+              </label>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-12 gap-4 px-4 py-3 border-b font-semibold text-sm">
           <div className="col-span-2">Código</div>
           <div className="col-span-6">Nome</div>
