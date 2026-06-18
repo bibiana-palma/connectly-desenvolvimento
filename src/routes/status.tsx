@@ -4,6 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { useRefresh } from "@/lib/refresh-context";
+import { loadBudgetStatuses } from "@/lib/budget-statuses";
 import { toast } from "sonner";
 import { Plus, Trash2, Pencil, Check, X } from "lucide-react";
 
@@ -44,13 +45,9 @@ function Statuses() {
 
   const load = () => {
     if (!user) return;
-    supabase
-      .from("budget_statuses")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("sort_order")
-      .order("created_at")
-      .then(({ data }) => setStatuses((data as Status[]) || []));
+    loadBudgetStatuses(user.id)
+      .then((data) => setStatuses(data as Status[]))
+      .catch((error) => toast.error(error.message));
   };
 
   const { bump } = useRefresh();
@@ -100,8 +97,11 @@ function Statuses() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Excluir este status?")) return;
+    const previousStatuses = statuses;
+    setStatuses((current) => current.filter((status) => status.id !== id));
     const { error } = await supabase.from("budget_statuses").delete().eq("id", id);
     if (error) {
+      setStatuses(previousStatuses);
       toast.error(error.message);
       return;
     }

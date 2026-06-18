@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
+import { loadBudgetStatuses } from "@/lib/budget-statuses";
 import { toast } from "sonner";
 import { ArrowLeft, Plus, Printer, Trash2 } from "lucide-react";
 import { CurrencyInput } from "@/components/CurrencyInput";
@@ -44,11 +45,11 @@ function BudgetDetail() {
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const [{ data: budget }, { data: itemsData }, { data: clientsData }, { data: statusesData }, { data: assignmentsData }] = await Promise.all([
+      const [statusesData, { data: budget }, { data: itemsData }, { data: clientsData }, { data: assignmentsData }] = await Promise.all([
+        loadBudgetStatuses(user.id),
         supabase.from("budgets").select("*").eq("id", id).eq("user_id", user.id).maybeSingle(),
         supabase.from("budget_items").select("*").eq("budget_id", id).order("created_at", { ascending: true }),
         supabase.from("clients").select("id,name").eq("user_id", user.id),
-        supabase.from("budget_statuses").select("id,name,color").eq("user_id", user.id).order("sort_order").order("created_at"),
         supabase.from("budget_status_assignments").select("status_id").eq("budget_id", id),
       ]);
       if (!budget) {
@@ -380,4 +381,3 @@ function Row({
     </div>
   );
 }
-

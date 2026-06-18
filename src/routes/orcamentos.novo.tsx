@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
+import { loadBudgetStatuses } from "@/lib/budget-statuses";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
 import { CurrencyInput } from "@/components/CurrencyInput";
@@ -45,16 +46,17 @@ function NewBudget() {
       .select("id,name")
       .eq("user_id", user.id)
       .then(({ data }) => setClients(data || []));
+    loadBudgetStatuses(user.id)
+      .then((data) => setCustomStatuses(data))
+      .catch((error) => toast.error(error.message));
     supabase
-      .from("budget_statuses")
-      .select("id,name,color")
-      .eq("user_id", user.id)
-      .order("sort_order")
-      .order("created_at")
+      .from("profiles")
+      .select("name")
+      .eq("id", user.id)
+      .maybeSingle()
       .then(({ data }) => {
-        setCustomStatuses(data || []);
+        setSeller(data?.name || user.user_metadata?.name || user.email?.split("@")[0] || "");
       });
-    setSeller(user.user_metadata?.name || user.email?.split("@")[0] || "");
   }, [user]);
 
   const productsTotal = items.reduce((s, it) => s + Number(it.quantity) * Number(it.unit_price), 0);
@@ -309,4 +311,3 @@ function Row({
     </div>
   );
 }
-

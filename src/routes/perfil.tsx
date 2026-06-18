@@ -3,7 +3,9 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
+import { formatPhone } from "@/lib/phone";
 import { toast } from "sonner";
+import type { User } from "@supabase/supabase-js";
 
 export const Route = createFileRoute("/perfil")({
   component: () => (
@@ -20,8 +22,17 @@ function Profile() {
 
   useEffect(() => {
     if (!user) return;
+    const fallback = getProfileFallback(user);
+    setForm(fallback);
+
     supabase.from("profiles").select("*").eq("id", user.id).maybeSingle().then(({ data }) => {
-      if (data) setForm({ name: data.name || "", company: data.company || "", phone: data.phone || "" });
+      if (data) {
+        setForm({
+          name: data.name || fallback.name,
+          company: data.company || fallback.company,
+          phone: data.phone || fallback.phone,
+        });
+      }
     });
   }, [user]);
 
@@ -53,7 +64,13 @@ function Profile() {
         </div>
         <div>
           <label className="block text-sm font-semibold mb-1">Telefone</label>
-          <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="bg-white text-foreground rounded-full px-4 py-2 w-full" />
+          <input
+            value={form.phone}
+            onChange={(e) => setForm({ ...form, phone: formatPhone(e.target.value) })}
+            maxLength={16}
+            placeholder="(51) 3566-10107"
+            className="bg-white text-foreground rounded-full px-4 py-2 w-full"
+          />
         </div>
         <button type="submit" disabled={loading} className="px-8 py-2.5 rounded-full bg-white text-primary font-bold disabled:opacity-60">
           {loading ? "..." : "Salvar"}
@@ -61,4 +78,14 @@ function Profile() {
       </form>
     </div>
   );
+}
+
+function getProfileFallback(user: User) {
+  const metadata = user.user_metadata ?? {};
+
+  return {
+    name: typeof metadata.name === "string" ? metadata.name : "",
+    company: typeof metadata.company === "string" ? metadata.company : "",
+    phone: typeof metadata.phone === "string" ? metadata.phone : "",
+  };
 }

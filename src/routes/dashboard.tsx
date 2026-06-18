@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
+import { loadBudgetStatuses } from "@/lib/budget-statuses";
 import {
   ArrowRight,
   Box,
@@ -50,13 +51,13 @@ function Dashboard() {
         { data: clientsData },
         { data: budgetsData },
         { data: productsData },
-        { data: statusesData },
+        statusesData,
         { data: assignmentsData },
       ] = await Promise.all([
         supabase.from("clients").select("*").eq("user_id", user.id).order("created_at"),
         supabase.from("budgets").select("*").eq("user_id", user.id).order("created_at"),
         supabase.from("products").select("*").eq("user_id", user.id).order("created_at"),
-        supabase.from("budget_statuses").select("*").eq("user_id", user.id).order("sort_order").order("created_at"),
+        loadBudgetStatuses(user.id),
         supabase.from("budget_status_assignments").select("*").eq("user_id", user.id),
       ]);
       setClients(clientsData || []);
@@ -75,15 +76,17 @@ function Dashboard() {
   const summaryStatuses = useMemo(
     () =>
       statuses.length
-        ? statuses.map((status) => ({
+        ? uniqueStatusSummaries(statuses.map((status) => ({
             key: status.id,
             label: status.name,
             color: status.color || "#3b82f6",
-            normalized: normalizeStatus(status.name),
-          }))
+            normalizedName: normalizeStatusName(status.name),
+            semanticKey: semanticStatusKey(status.name),
+          })))
         : FALLBACK_STATUSES.map((status) => ({
             ...status,
-            normalized: normalizeStatus(status.label),
+            normalizedName: normalizeStatusName(status.label),
+            semanticKey: status.key,
           })),
     [statuses],
   );
@@ -102,11 +105,10 @@ function Dashboard() {
     () =>
       budgets.map((budget) => {
         const assignedStatus = statusById[primaryStatusByBudgetId[budget.id] || budget.custom_status_id];
-        const legacyStatus = normalizeStatus(budget.status);
-        const matchingStatus = summaryStatuses.find((status) => status.normalized === legacyStatus);
+        const matchingStatus = summaryStatuses.find((status) => status.semanticKey === budget.status);
         return {
           ...budget,
-          dashboardStatusKey: assignedStatus?.id || matchingStatus?.key || legacyStatus,
+          dashboardStatusKey: assignedStatus?.id || matchingStatus?.key || budget.status,
           dashboardStatusLabel: assignedStatus?.name || matchingStatus?.label || statusLabelFromKey(budget.status),
         };
       }),
@@ -291,7 +293,7 @@ function MetricCard({
   );
 }
 
-function normalizeStatus(value?: string) {
+function semanticStatusKey(value?: string) {
   const normalized = (value || "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -300,11 +302,34 @@ function normalizeStatus(value?: string) {
   if (normalized.includes("pago")) return "pago";
   if (normalized.includes("producao")) return "producao";
   if (normalized.includes("fechado")) return "fechado_pagamento";
-  return "em_aberto";
+  if (normalized.includes("aberto")) return "em_aberto";
+  return null;
+}
+
+function normalizeStatus(value?: string) {
+  return semanticStatusKey(value) || "em_aberto";
 }
 
 function statusLabelFromKey(key?: string) {
   return FALLBACK_STATUSES.find((status) => status.key === key)?.label || "Em aberto";
+}
+
+function uniqueStatusSummaries<T extends { normalizedName: string }>(statuses: T[]) {
+  const seen = new Set<string>();
+
+  return statuses.filter((status) => {
+    if (seen.has(status.normalizedName)) return false;
+    seen.add(status.normalizedName);
+    return true;
+  });
+}
+
+function normalizeStatusName(value?: string) {
+  return (value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
 }
 
 function formatDate(value?: string) {

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
+import { formatPhone } from "@/lib/phone";
 import { toast } from "sonner";
 import { ArrowLeft, Trash2 } from "lucide-react";
 
@@ -48,10 +49,20 @@ function ClientDetail() {
     const { error } = await supabase.from("clients").delete().eq("id", id);
     if (error) toast.error(error.message);
     else {
-      toast.success("Cliente excluído");
+      toast.success("Cliente excluido");
       navigate({ to: "/clientes" });
     }
   };
+
+  const isLegalEntity = Boolean(form.is_legal_entity);
+  const fields = [
+    [isLegalEntity ? "Razao social:" : "Nome:", "name"],
+    ["Telefone:", "phone"],
+    [isLegalEntity ? "Endereco comercial:" : "Endereco (entrega):", "address"],
+    [isLegalEntity ? "Endereco de entrega/cobranca:" : "Endereco (secundario):", "secondary_address"],
+    [isLegalEntity ? "CNPJ:" : "CPF:", "cpf"],
+    ["Email:", "email"],
+  ];
 
   return (
     <div>
@@ -61,26 +72,46 @@ function ClientDetail() {
       <h1 className="font-display italic text-3xl text-primary mb-8">Editar Cliente</h1>
 
       <div className="bg-primary text-primary-foreground rounded-2xl p-8 space-y-5 max-w-4xl">
-        {[
-          ["Nome:", "name"],
-          ["Telefone:", "phone"],
-          ["Endereço (entrega):", "address"],
-          ["Endereço (secundário):", "secondary_address"],
-          ["CPF:", "cpf"],
-          ["Email:", "email"],
-        ].map(([label, key]) => (
+        <div className="flex justify-end items-center gap-3">
+          <span className="text-sm font-semibold">
+            {isLegalEntity ? "Pessoa juridica" : "Pessoa fisica"}
+          </span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={isLegalEntity}
+            onClick={() => setForm({ ...form, is_legal_entity: !isLegalEntity })}
+            className={`w-12 h-6 rounded-full transition relative ${isLegalEntity ? "bg-white" : "bg-white/30"}`}
+          >
+            <span
+              className={`absolute top-0.5 ${isLegalEntity ? "right-0.5" : "left-0.5"} w-5 h-5 rounded-full transition`}
+              style={{
+                background: isLegalEntity ? "hsl(var(--primary))" : "white",
+              }}
+            />
+          </button>
+        </div>
+
+        {fields.map(([label, key]) => (
           <div key={key}>
             <label className="block text-sm font-semibold mb-1">{label}</label>
             <input
-              type="text"
+              type={key === "email" ? "email" : "text"}
               value={form[key as string] || ""}
-              onChange={(e) => setForm({ ...form, [key as string]: e.target.value })}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  [key as string]: key === "phone" ? formatPhone(e.target.value) : e.target.value,
+                })
+              }
+              maxLength={key === "phone" ? 16 : undefined}
+              placeholder={key === "phone" ? "(51) 3566-10107" : undefined}
               className="bg-white text-foreground rounded-full px-4 py-2 outline-none w-full"
             />
           </div>
         ))}
         <div className="bg-card text-card-foreground rounded-lg p-4">
-          <label className="font-bold text-primary text-sm block mb-2">OBSERVAÇÕES:</label>
+          <label className="font-bold text-primary text-sm block mb-2">OBSERVACOES:</label>
           <textarea
             value={form.notes || ""}
             onChange={(e) => setForm({ ...form, notes: e.target.value })}
