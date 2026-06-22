@@ -1,12 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
-import { Headphones, CheckCircle2, Monitor, Settings, BarChart3, Lightbulb } from "lucide-react";
+import { Headphones, Monitor, BarChart3, Lightbulb } from "lucide-react";
 
 const cards = [
   { title: "Atendimento", icon: Headphones },
-  { title: "Valores", icon: CheckCircle2 },
   { title: "Sistema", icon: Monitor },
-  { title: "Configurações", icon: Settings },
   { title: "Relatórios", icon: BarChart3 },
   { title: "Dicas", icon: Lightbulb },
 ];
