@@ -101,18 +101,18 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="px-2 xl:px-4 space-y-2">
           <Link
             to="/clientes/novo"
-            className="block w-full text-center bg-white text-sidebar font-semibold py-2.5 rounded-full text-xs xl:text-sm hover:bg-white/90 transition"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-white px-3 text-xs font-semibold text-sidebar shadow-sm transition hover:bg-white/90 hover:shadow-md xl:text-sm"
             title="LEAD"
           >
-            <Plus className="inline w-4 h-4 -mt-0.5 xl:mr-1" />
+            <Plus className="w-4 h-4 shrink-0" />
             <span className={`${expanded ? "inline" : "hidden"} xl:inline`}>LEAD</span>
           </Link>
           <Link
             to="/orcamentos/novo"
-            className="block w-full text-center bg-white text-sidebar font-semibold py-2.5 rounded-full text-xs xl:text-sm hover:bg-white/90 transition"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-white px-3 text-xs font-semibold text-sidebar shadow-sm transition hover:bg-white/90 hover:shadow-md xl:text-sm"
             title="Orçamento"
           >
-            <Plus className="inline w-4 h-4 -mt-0.5 xl:mr-1" />
+            <Plus className="w-4 h-4 shrink-0" />
             <span className={`${expanded ? "inline" : "hidden"} xl:inline`}>Orçamento</span>
           </Link>
         </div>
