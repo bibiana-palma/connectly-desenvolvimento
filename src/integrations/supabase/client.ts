@@ -10,6 +10,14 @@ function createSupabaseClient() {
   // Treat obvious placeholder values as missing so the mock is used during local dev
   const isPlaceholder = (val?: string, marker?: string) => !val || val.includes('your-project') || val.includes('your-anon') || val.includes('your-anon-or-publishable-key');
 
+  if (isPlaceholder(SUPABASE_URL, 'your-project') || isPlaceholder(SUPABASE_PUBLISHABLE_KEY, 'your-anon')) {
+    if (import.meta.env.PROD) {
+      throw new Error(
+        'Supabase nao configurado: defina VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY no ambiente de producao.',
+      );
+    }
+  }
+
   // If env vars are missing or set to the example placeholders, provide a lightweight mock Supabase client
   if (isPlaceholder(SUPABASE_URL, 'your-project') || isPlaceholder(SUPABASE_PUBLISHABLE_KEY, 'your-anon')) {
     // Minimal in-memory mocks to allow browsing the app without Supabase
