@@ -18,3 +18,6 @@ Thumbs.db
 .git.nix-pointer
 .scripts/
 .tanstack/tmp/
+
+.vercel
+supabase/.temp/
