@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Plus, Printer, Trash2 } from "lucide-react";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { parseWholeNumberInput, toWholeNumber } from "@/lib/whole-number";
+import { ClientPicker } from "@/components/ClientPicker";
 
 export const Route = createFileRoute("/orcamentos/$id")({
   component: () => (
@@ -50,7 +51,7 @@ function BudgetDetail() {
         loadBudgetStatuses(user.id),
         supabase.from("budgets").select("*").eq("id", id).eq("user_id", user.id).maybeSingle(),
         supabase.from("budget_items").select("*").eq("budget_id", id).order("created_at", { ascending: true }),
-        supabase.from("clients").select("id,name").eq("user_id", user.id),
+        supabase.from("clients").select("id,name,phone,email,cpf").eq("user_id", user.id).order("created_at", { ascending: true }),
         supabase.from("budget_status_assignments").select("status_id").eq("budget_id", id),
       ]);
       if (!budget) {
@@ -201,18 +202,15 @@ function BudgetDetail() {
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <label className="font-bold text-primary w-20 shrink-0">Cliente:</label>
-            <select
-              value={clientId}
-              onChange={(e) => setClientId(e.target.value)}
-              className="bg-primary text-primary-foreground rounded-md px-3 py-1 w-full sm:w-56"
-            >
-              <option value="">Selecione...</option>
-              {clients.map((c) => (
-                <option key={c.id} value={c.id} className="bg-white text-foreground">
-                  {c.name}
-                </option>
-              ))}
-            </select>
+            <ClientPicker
+              clients={clients}
+              selectedClientId={clientId}
+              fallbackName={clientNameSnapshot}
+              onSelect={(value) => {
+                setClientId(value);
+                setClientNameSnapshot("");
+              }}
+            />
           </div>
         </div>
       </div>

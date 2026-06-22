@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { parseWholeNumberInput } from "@/lib/whole-number";
+import { ClientPicker } from "@/components/ClientPicker";
 
 export const Route = createFileRoute("/orcamentos/novo")({
   component: () => (
@@ -44,8 +45,9 @@ function NewBudget() {
     if (!user) return;
     supabase
       .from("clients")
-      .select("id,name")
+      .select("id,name,phone,email,cpf")
       .eq("user_id", user.id)
+      .order("created_at", { ascending: true })
       .then(({ data }) => setClients(data || []));
     loadBudgetStatuses(user.id)
       .then((data) => setCustomStatuses(data))
@@ -140,18 +142,7 @@ function NewBudget() {
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <label className="font-bold text-primary w-20 shrink-0">Cliente:</label>
-            <select
-              value={clientId}
-              onChange={(e) => setClientId(e.target.value)}
-              className="bg-primary text-primary-foreground rounded-md px-3 py-1 w-full sm:w-56"
-            >
-              <option value="">Selecione...</option>
-              {clients.map((c) => (
-                <option key={c.id} value={c.id} className="bg-white text-foreground">
-                  {c.name}
-                </option>
-              ))}
-            </select>
+            <ClientPicker clients={clients} selectedClientId={clientId} onSelect={setClientId} />
           </div>
         </div>
       </div>
