@@ -300,22 +300,22 @@ function PreferencesSection({
   return (
     <section className="space-y-5">
       <SectionTitle title="Preferencias" />
-      <div className="max-w-xl space-y-3">
-          <Toggle
-            label="Mostrar produtos desativados"
-            checked={settings.show_inactive_products}
-            onChange={(checked) => setSettings({ ...settings, show_inactive_products: checked })}
-          />
-          <Toggle
-            label="Exigir CPF/CNPJ no cliente"
-            checked={settings.require_client_document}
-            onChange={(checked) => setSettings({ ...settings, require_client_document: checked })}
-          />
-          <Toggle
-            label="Exigir telefone no cliente"
-            checked={settings.require_client_phone}
-            onChange={(checked) => setSettings({ ...settings, require_client_phone: checked })}
-          />
+      <div className="max-w-2xl divide-y divide-border overflow-hidden rounded-lg border border-border bg-white">
+        <Toggle
+          label="Mostrar produtos desativados"
+          checked={settings.show_inactive_products}
+          onChange={(checked) => setSettings({ ...settings, show_inactive_products: checked })}
+        />
+        <Toggle
+          label="Exigir CPF/CNPJ no cliente"
+          checked={settings.require_client_document}
+          onChange={(checked) => setSettings({ ...settings, require_client_document: checked })}
+        />
+        <Toggle
+          label="Exigir telefone no cliente"
+          checked={settings.require_client_phone}
+          onChange={(checked) => setSettings({ ...settings, require_client_phone: checked })}
+        />
       </div>
     </section>
   );
@@ -371,15 +371,26 @@ function Toggle({
   onChange: (checked: boolean) => void;
 }) {
   return (
-    <label className="flex items-center justify-between gap-3 border border-border rounded-lg px-4 py-3 text-sm font-semibold text-primary bg-white">
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className="flex w-full items-center justify-between gap-4 px-4 py-3 text-left text-sm font-semibold text-primary transition hover:bg-accent/60"
+    >
       <span>{label}</span>
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(event) => onChange(event.target.checked)}
-        className="h-5 w-5 accent-primary"
-      />
-    </label>
+      <span
+        className={`relative h-7 w-12 shrink-0 rounded-full transition ${
+          checked ? "bg-primary" : "bg-muted"
+        }`}
+      >
+        <span
+          className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition ${
+            checked ? "left-6" : "left-1"
+          }`}
+        />
+      </span>
+    </button>
   );
 }
 
