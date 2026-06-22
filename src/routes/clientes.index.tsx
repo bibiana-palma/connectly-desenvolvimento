@@ -44,7 +44,10 @@ function ClientsList() {
         c.name?.toLowerCase().includes(term) ||
         c.email?.toLowerCase().includes(term) ||
         c.phone?.toLowerCase().includes(term) ||
-        c.cpf?.toLowerCase().includes(term);
+        c.cpf?.toLowerCase().includes(term) ||
+        c.cep?.toLowerCase().includes(term) ||
+        c.street?.toLowerCase().includes(term) ||
+        c.neighborhood?.toLowerCase().includes(term);
 
       if (!matchesSearch) return false;
       if (typeFilter === "person" && c.is_legal_entity) return false;

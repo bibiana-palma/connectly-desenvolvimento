@@ -200,43 +200,55 @@ export type Database = {
       clients: {
         Row: {
           address: string | null
+          cep: string | null
+          complement: string | null
           cpf: string | null
           created_at: string
           email: string | null
           id: string
           is_legal_entity: boolean
           name: string
+          neighborhood: string | null
           notes: string | null
           phone: string | null
           secondary_address: string | null
+          street: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           address?: string | null
+          cep?: string | null
+          complement?: string | null
           cpf?: string | null
           created_at?: string
           email?: string | null
           id?: string
           is_legal_entity?: boolean
           name: string
+          neighborhood?: string | null
           notes?: string | null
           phone?: string | null
           secondary_address?: string | null
+          street?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           address?: string | null
+          cep?: string | null
+          complement?: string | null
           cpf?: string | null
           created_at?: string
           email?: string | null
           id?: string
           is_legal_entity?: boolean
           name?: string
+          neighborhood?: string | null
           notes?: string | null
           phone?: string | null
           secondary_address?: string | null
+          street?: string | null
           updated_at?: string
           user_id?: string
         }
