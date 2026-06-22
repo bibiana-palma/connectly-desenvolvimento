@@ -7,6 +7,7 @@ import { loadBudgetStatuses } from "@/lib/budget-statuses";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
 import { CurrencyInput } from "@/components/CurrencyInput";
+import { parseWholeNumberInput } from "@/lib/whole-number";
 
 export const Route = createFileRoute("/orcamentos/novo")({
   component: () => (
@@ -172,11 +173,11 @@ function NewBudget() {
                 placeholder="Descrição do produto"
               />
               <input
-                type="number"
-                min={0}
-                step="0.01"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={it.quantity}
-                onChange={(e) => updateItem(i, { quantity: Number(e.target.value) })}
+                onChange={(e) => updateItem(i, { quantity: parseWholeNumberInput(e.target.value, 1) })}
                 className="col-span-2 px-4 py-3 outline-none border-r border-primary/40 text-center"
               />
               <div className="col-span-3 flex">

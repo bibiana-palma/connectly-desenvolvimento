@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Plus, Power, Search, SlidersHorizontal, Trash2, X } from "lucide-react";
+import { parseWholeNumberInput } from "@/lib/whole-number";
 
 export const Route = createFileRoute("/produtos")({
   component: () => (
@@ -91,7 +92,7 @@ function Products() {
       price: form.price,
       user_id: user.id,
       is_active: true,
-      ...(form.stock_quantity > 0 ? { stock_quantity: form.stock_quantity } : {}),
+      stock_quantity: form.stock_quantity,
     };
 
     const { error } = await supabase.from("products").insert(productPayload);
@@ -302,11 +303,11 @@ function Products() {
               <div>
                 <label className="text-xs font-semibold text-muted-foreground">Quantidade em estoque</label>
                 <input
-                  type="number"
-                  min={0}
-                  step={1}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={form.stock_quantity}
-                  onChange={(e) => setForm({ ...form, stock_quantity: Number(e.target.value) })}
+                  onChange={(e) => setForm({ ...form, stock_quantity: parseWholeNumberInput(e.target.value, 0) })}
                   className="w-full border rounded px-3 py-2 mt-1"
                 />
               </div>
