@@ -317,6 +317,60 @@ export type Database = {
         }
         Relationships: []
       }
+      user_settings: {
+        Row: {
+          company_address: string | null
+          company_document: string | null
+          company_email: string | null
+          company_name: string | null
+          company_phone: string | null
+          created_at: string
+          default_budget_notes: string | null
+          default_freight: number
+          quote_validity_days: number
+          require_client_document: boolean
+          require_client_phone: boolean
+          show_inactive_products: boolean
+          theme: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_address?: string | null
+          company_document?: string | null
+          company_email?: string | null
+          company_name?: string | null
+          company_phone?: string | null
+          created_at?: string
+          default_budget_notes?: string | null
+          default_freight?: number
+          quote_validity_days?: number
+          require_client_document?: boolean
+          require_client_phone?: boolean
+          show_inactive_products?: boolean
+          theme?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_address?: string | null
+          company_document?: string | null
+          company_email?: string | null
+          company_name?: string | null
+          company_phone?: string | null
+          created_at?: string
+          default_budget_notes?: string | null
+          default_freight?: number
+          quote_validity_days?: number
+          require_client_document?: boolean
+          require_client_phone?: boolean
+          show_inactive_products?: boolean
+          theme?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
