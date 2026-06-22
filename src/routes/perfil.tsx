@@ -35,7 +35,6 @@ type SettingsForm = {
   default_freight: number;
   quote_validity_days: number;
   default_budget_notes: string;
-  theme: string;
   show_inactive_products: boolean;
   require_client_document: boolean;
   require_client_phone: boolean;
@@ -57,7 +56,6 @@ const emptySettings: SettingsForm = {
   default_freight: 0,
   quote_validity_days: 7,
   default_budget_notes: "",
-  theme: "light",
   show_inactive_products: true,
   require_client_document: false,
   require_client_phone: false,
@@ -100,7 +98,6 @@ function SettingsPage() {
         default_freight: Number(settingsData?.default_freight || 0),
         quote_validity_days: Number(settingsData?.quote_validity_days || 7),
         default_budget_notes: settingsData?.default_budget_notes || "",
-        theme: settingsData?.theme || "light",
         show_inactive_products: settingsData?.show_inactive_products ?? true,
         require_client_document: settingsData?.require_client_document ?? false,
         require_client_phone: settingsData?.require_client_phone ?? false,
@@ -303,20 +300,7 @@ function PreferencesSection({
   return (
     <section className="space-y-5">
       <SectionTitle title="Preferencias" />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <label className="block text-sm font-semibold text-primary">
-          Tema
-          <select
-            value={settings.theme}
-            onChange={(event) => setSettings({ ...settings, theme: event.target.value })}
-            className="mt-1 bg-white text-foreground rounded-lg px-4 py-2 outline-none w-full border border-border"
-          >
-            <option value="light">Claro</option>
-            <option value="dark">Escuro</option>
-            <option value="system">Automatico</option>
-          </select>
-        </label>
-        <div className="space-y-3">
+      <div className="max-w-xl space-y-3">
           <Toggle
             label="Mostrar produtos desativados"
             checked={settings.show_inactive_products}
@@ -332,7 +316,6 @@ function PreferencesSection({
             checked={settings.require_client_phone}
             onChange={(checked) => setSettings({ ...settings, require_client_phone: checked })}
           />
-        </div>
       </div>
     </section>
   );
